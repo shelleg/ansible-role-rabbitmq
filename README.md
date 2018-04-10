@@ -57,7 +57,9 @@ Variables
 * `rabbitmq_management_plugin_enable: true` - enable management plugin for rabbitmqctl operations
 ```
 
-**Other important variables:**
+Other important variables:
+--------------------------
+
 * `rabbitmq_inventory_group: rabbitmq_servers` inventory group to use for rabbitmq cluster
 * `rabbitmq_master: []` - the first from the group will be elected as "master" / fist node of the cluster unless this variable is specified - should be a resolvable FQDN ...
 * `rabbitmq_homedir` see Caveats section below.
@@ -69,6 +71,7 @@ Caveats
 Changing the default data directory - although supported but quite delicate hence the default directory structure is preserved like so:
 
 These vars create a rabbitmq-env.conf file used by rabbbitmq-server:
+
 ```
 rabbitmq_homedir: /var/lib/rabbitmq
 rabbitmq_config_dir: /etc/rabbitmq
@@ -153,7 +156,9 @@ Requirements:
   cluster_formation.classic_config.nodes.3 = rabbit@rabbit3
   ```
 
-**Example playbook:**
+Example playbook:
+-----------------
+
 ```
 ---
 - hosts: rabbitmq_servers
