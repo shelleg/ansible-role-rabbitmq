@@ -1,0 +1,109 @@
+---
+
+# role switches
+rabbitmq_purge: false
+rabbitmq_cleanup: false
+rabbitmq_backup: true
+
+rabbitmq_setup_cluster: false
+rabbitmq_setup_ha: false
+
+rabbitmq_guest_disable: false
+rabbitmq_management_plugin_enable: true
+# role runtime parameters
+rabbitmq_cluster_name: rabbitmq-cluster
+rabbitmq_inventory_group: rabbitmq_servers
+rabbitmq_master: []
+
+rabbitmq_runas_user: rabbitmq
+rabbitmq_user: "{{ rabbitmq_runas_user }}"
+rabbitmq_group: rabbitmq
+
+rabbitmq_homedir: /var/lib/rabbitmq
+rabbitmq_config_dir: /etc/rabbitmq
+rabbitmq_systemd_path: /etc/systemd/system/rabbitmq-server.service.d
+# see -> https://www.rabbitmq.com/relocate.html
+# rabbitmq_base e.g /data/rabbitmq
+rabbitmq_base: "{{ rabbitmq_homedir }}"
+rabbitmq_config_file: "{{ rabbitmq_config_dir }}/rabbitmq.conf"
+rabbitmq_advanced_config_file: "{{ rabbitmq_config_dir }}/advanced.config"
+rabbitmq_generated_config_dir: "{{ rabbitmq_config_dir }}/config/generated/"
+rabbitmq_mnesia_base: "{{ rabbitmq_base }}/mnesia"
+rabbitmq_mnesia_dir: "{{ rabbitmq_mnesia_base }}/rabbit@{{ ansible_hostname }}"
+rabbitmq_schema_dir: "{{ rabbitmq_base }}/schema"
+rabbitmq_log_base: /var/log/rabbitmq
+rabbitmq_logs: "{{ rabbitmq_log_base }}/rabbit@{{ ansible_hostname }}.log"
+rabbitmq_sasl_logs: "{{ rabbitmq_log_base }}/rabbit@{{ ansible_hostname }}-sasl.log"
+rabbitmq_plugins_dir: "{{ rabbitmq_base }}/plugins"
+rabbitmq_enabled_plugins_file: "{{ rabbitmq_config_dir }}/enabled_plugins"
+rabbitmq_pid_file: "{{ rabbitmq_mnesia_dir }}.pid"
+
+rabbitmq_erlang_cookie: 'SuperCaliFragilisticExpialiDocious'
+rabbitmq_erlang_cookie_file: "{{ rabbitmq_base }}/.erlang.cookie"
+rabbitmq_dir_list:
+  - "{{ rabbitmq_homedir }}"
+  - "{{ rabbitmq_base }}"
+  - "{{ rabbitmq_mnesia_base }}"
+  - "{{ rabbitmq_log_base }}"
+  - "{{ rabbitmq_config_dir }}"
+  - "{{ rabbitmq_generated_config_dir }}"
+  - "{{ rabbitmq_plugins_dir }}"
+
+# see -> https://www.rabbitmq.com/partitions.html
+rabbitmq_partition_handling: ignore
+# pause_if_all_down reuires:
+# rabbitmq_cluster_partition_handling.pause_if_all_down_nodes = [ 'rabbit@myhost1', 'rabbit@myhost1' ]
+
+rabbitmq_users:
+  - name: 'rabbitmqadmin'
+    password: 'rabbitmqadmin'
+    vhost: '/'
+    configure_priv: '.*'
+    read_priv: '.*'
+    write_priv: '.*'
+    state: present
+    tags: "administrator"
+
+rabbitmq_queues:
+  - name: foo
+  - name: bar
+rabbitmq_bindings:
+  - source: foo
+    destination: foo
+    routing_key: ''
+  - source: bar
+    destination: bar
+    routing_key: ''
+rabbitmq_exchanges:
+  - name: foo
+    type: direct
+  - name: bar
+    type: direct
+
+## Shovels see -> https://www.rabbitmq.com/shovel.html
+# rabbitmq_shovel_src: rabbit1
+# rabbitmq_shovel_username: rabbitmqadmin
+# rabbitmq_shovel_password: rabbitmqadmin
+# rabbitmq_shovels:
+#   - name: "foo"
+#     json: ' { "src-protocol": "amqp091", "src-uri": "amqp://{{ rabbitmq_shovel_username }}:{{ rabbitmq_shovel_password }}@{{ rabbitmq_shovel_src }}:{{ rabbitmq_listen_port }}", "src-queue": "foo", "dest-protocol": "amqp091", "dest-uri": "amqp://{{ rabbitmq_shovel_username }}:{{ rabbitmq_shovel_password }}@{{ ansible_hostname }}:{{ rabbitmq_listen_port }}", "dest-queue": "foo", "add-forward-headers": true, "ack-mode": "on-publish" }'
+#   - name: "bar"
+#     json: ' { "src-protocol": "amqp091", "src-uri": "amqp://{{ rabbitmq_shovel_username }}:{{ rabbitmq_shovel_password }}@{{ rabbitmq_shovel_src }}:{{ rabbitmq_listen_port }}", "src-queue": "bar", "dest-protocol": "amqp091", "dest-uri": "amqp://{{ rabbitmq_shovel_username }}:{{ rabbitmq_shovel_password }}@{{ ansible_hostname }}:{{ rabbitmq_listen_port }}", "dest-queue": "bar", "add-forward-headers": true, "ack-mode": "on-publish" }'
+
+
+# file limit recommended for production
+rabbitmq_file_limit: 65536
+
+rabbitmq_major_version: 3
+rabbitmq_minor_version: 7
+rabbitmq_patch_version: 4
+
+rabbitmq_listen_port: 5672
+rabbitmq_listen_addr: 0.0.0.0
+
+rabbitmq_tls: no
+rabbitmq_ca_cert_file: ~
+rabbitmq_cert_file: ~
+rabbtimq_cert_key: ~
+rabbitmq_ssl_verify: verify_peer
+rabbitmq_ssl_fail_on_missing_peer_cert: yes

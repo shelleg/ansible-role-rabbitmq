@@ -1,0 +1,3 @@
+---
+- src: https://github.com/bertvv/ansible-role-hosts.git
+- src: shelleg.epel

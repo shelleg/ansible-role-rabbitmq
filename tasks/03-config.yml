@@ -1,0 +1,56 @@
+---
+- name: "RabbitMQ config :: Create ulimits dir"
+  file:
+    path: "{{ rabbitmq_systemd_path }}"
+    state: directory
+    owner: root
+    group: root
+    mode: 0755
+
+- name: "RabbitMQ config :: Copy RabbitMQ limits configuration"
+  template:
+    src: limits.conf.j2
+    dest: "{{ rabbitmq_systemd_path }}/limits.conf"
+    mode: 0755
+  register: limits_conf
+
+- name: "RabbitMQ config :: Copy RabbitMQ configuration"
+  template:
+    src: rabbitmq.conf.j2
+    dest: "{{ rabbitmq_config_file }}"
+    owner: "{{ rabbitmq_user }}"
+    group: "{{ rabbitmq_group }}"
+    mode: 0755
+  register: rabbitmq_conf
+
+- name: "RabbitMQ config :: Copy rabbitmq-env.conf for environment variables overrides"
+  template:
+    src: rabbitmq-env.conf.j2
+    dest: "{{ rabbitmq_config_dir }}/rabbitmq-env.conf"
+    owner: "{{ rabbitmq_user }}"
+    group: "{{ rabbitmq_group }}"
+    mode: 0755
+  register: rabbitmq_env_conf
+
+- name: "RabbitMQ config :: Ensure {{ rabbitmq_config_dir }} has correct permissions"
+  file:
+    dest: "{{ rabbitmq_config_dir }}"
+    recurse: true
+    owner: "{{ rabbitmq_user }}"
+    group: "{{ rabbitmq_group }}"
+    mode: 0755
+
+- name: "RabbitMQ config :: Enables the rabbitmq_management plugin"
+  rabbitmq_plugin:
+    name: rabbitmq_management
+    state: enabled
+    new_only: no
+  when: rabbitmq_management_plugin_enable or rabbitmq_shovels is defined
+  register: rabbitmq_plugins_stat
+
+- name: "RabbitMQ config :: Ensure RabbitMQ service is running"
+  systemd:
+      name: rabbitmq-server
+      state: restarted
+      daemon_reload: yes
+  when: limits_conf.changed or rabbitmq_conf.changed or rabbitmq_env_conf.changed or rabbitmq_plugins_stat.changed

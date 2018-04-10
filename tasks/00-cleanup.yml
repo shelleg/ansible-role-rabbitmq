@@ -1,0 +1,52 @@
+---
+- name: "RabbitMQ cleanup :: Stopping and disabling RabbitMQ service"
+  service:
+    name: rabbitmq-server
+    state: stopped
+    enabled: no
+  ignore_errors: true
+
+- name: "RabbitMQ cleanup :: Check if RabbitMQ dirs present"
+  stat:
+    path: "{{ item }}"
+  with_items:
+    - "{{ rabbitmq_dir_list }}"
+  register: rabbitmq_dirs
+
+- name: "RabbitMQ cleanup :: Backup RabbitMQ dirs"
+  copy:
+    src: "{{ item.item }}/"
+    dest: "{{ item.item }}.{{ ansible_date_time.epoch }}/"
+    remote_src: yes
+  with_items:
+    - "{{ rabbitmq_dirs.results }}"
+  when: rabbitmq_backup and item.stat.exists
+
+- name: "RabbitMQ cleanup :: Remove RabbitMQ dirs"
+  file:
+    path: "{{ item.item }}"
+    state: absent
+  with_items:
+    - "{{ rabbitmq_dirs.results }}"
+
+- name: "RabbitMQ cleanup :: Uninstall RabbitMQ"
+  yum:
+    name: rabbitmq-server
+    state: absent
+
+- name: "RabbitMQ cleanup :: Remove RabbitMQ dirs"
+  file:
+    path: "{{ item }}"
+    state: absent
+  with_items:
+    - "{{ rabbitmq_dir_list }}"
+
+- name: "RabbitMQ cleanup :: Remove user {{ rabbitmq_user }}"
+  user:
+    name: "{{ rabbitmq_user }}"
+    state: absent
+
+- name: "RabbitMQ cleanup :: Remove group {{ rabbitmq_group }}"
+  group:
+    name: "{{ rabbitmq_group }}"
+    state: absent

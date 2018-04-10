@@ -1,0 +1,24 @@
+---
+
+- name: "RabbitMQ ha :: setting up ha on queue(s)"
+  command: rabbitmqctl set_policy HA "" '{"ha-mode":"all", "ha-sync-mode":"automatic"}'
+  run_once: true
+
+- name: "RabbitMQ ha :: Enables the rabbitmq_shovel_management plugin"
+  rabbitmq_plugin:
+    names: rabbitmq_management,rabbitmq_shovel_management
+    state: enabled
+    new_only: no
+  when: rabbitmq_management_plugin_enable or rabbitmq_shovels is defined
+
+- name: "RabbitMQ ha :: create shovles"
+  shell: "rabbitmqctl set_parameter shovel {{ item.name }}_shovel '{{ item.json }}'"
+  with_items:
+    - "{{ rabbitmq_shovels }}"
+  when: not(
+          (rabbitmq_shovels is undefined)
+          or
+          (rabbitmq_shovels is none)
+          or
+          (rabbitmq_shovels | trim == '')
+           )  

@@ -1,0 +1,12 @@
+listeners.tcp.1 = {{ rabbitmq_listen_addr }}:{{ rabbitmq_listen_port }}
+# listeners.tcp.2 = :::{{ rabbitmq_listen_port }} # add ipv6 support ....
+
+{% if rabbitmq_setup_cluster %}
+# Cluster configuration
+cluster_formation.peer_discovery_backend = rabbit_peer_discovery_classic_config
+cluster_partition_handling = {{ rabbitmq_partition_handling }}
+
+{% for host in groups[rabbitmq_inventory_group] -%}
+cluster_formation.classic_config.nodes.{{loop.index}} = rabbit@{{hostvars[host]['ansible_hostname']}}
+{% endfor -%}
+{% endif %}

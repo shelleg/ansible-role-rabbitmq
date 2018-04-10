@@ -1,0 +1,29 @@
+---
+# - name: "RabbitMQ install {{ ansible_os_family }} :: Installing RabbitMQ pre-reqs"
+#   yum:
+#     name: "{{ item }}"
+#     state: present
+#   become: true
+#   with_items:
+#     - epel-release
+
+- name: "RabbitMQ install {{ ansible_os_family }} :: Add RabbitMQ bintray repository"
+  # https://bintray.com/rabbitmq/rpm/rabbitmq-server
+  template:
+    src: rabbitmq-server.repo.j2
+    dest: /etc/yum.repos.d/rabbitmq-server.repo
+    mode: 0755
+
+- name: "RabbitMQ cluster :: Copy erlang cookie"
+  template:
+    src: erlang.cookie.j2
+    dest: "{{ rabbitmq_erlang_cookie_file }}"
+    owner: "{{ rabbitmq_user }}"
+    group: "{{ rabbitmq_group }}"
+    mode: 0400
+    backup: yes
+
+- name: "RabbitMQ install {{ ansible_os_family }} :: Installing RabbitMQ"
+  yum:
+    name: rabbitmq-server
+    state: present

@@ -1,0 +1,99 @@
+---
+- name: "RabbitMQ cluster :: Set rabbitmq_leader variable"
+  set_fact:
+    rabbitmq_master: "{{ hostvars[groups[rabbitmq_inventory_group][0]]['inventory_hostname']}}"
+  when: rabbitmq_master is not defined or rabbitmq_master != ""
+
+- name: "RabbitMQ cluster :: Set rabbitmq_partition_handling variable"
+  set_fact:
+    rabbitmq_partition_handling: autoheal
+  when: groups[rabbitmq_inventory_group] | length == 2
+
+- name: "RabbitMQ cluster :: debug msg"
+  debug:
+    var: rabbitmq_master
+  verbosity: 2
+
+- name: "RabbitMQ cluster :: Copy RabbitMQ configuration"
+  template:
+    src: rabbitmq.conf.j2
+    dest: /etc/rabbitmq/rabbitmq.conf
+
+- name: "RabbitMQ cluster :: Restart RabbitMQ master"
+  systemd:
+    name: rabbitmq-server
+    state: restarted
+    daemon_reload: yes
+  delegate_to: "{{ rabbitmq_master }}"
+  run_once: yes
+
+- name: "RabbitMQ cluster :: Stop RabbitMQ app on slave(s)"
+  command: rabbitmqctl stop_app
+  when: inventory_hostname != rabbitmq_master
+
+- name: "RabbitMQ cluster :: Reset RabbitMQ app on slave(s)"
+  command: rabbitmqctl reset
+  when: inventory_hostname != rabbitmq_master
+
+- name: "RabbitMQ cluster :: Stopping rabbitmq-server"
+  systemd:
+    name: rabbitmq-server
+    state: stopped
+
+- name: "RabbitMQ cluster :: Copy erlang cookie"
+  template:
+    src: erlang.cookie.j2
+    dest: "{{ rabbitmq_erlang_cookie_file }}"
+    owner: "{{ rabbitmq_user }}"
+    group: "{{ rabbitmq_group }}"
+    mode: 0400
+    backup: yes
+
+- name: "RabbitMQ cluster :: Restarting rabbitmq-server on {{ rabbitmq_master }}"
+  service:
+    name: rabbitmq-server
+    state: restarted
+  when: inventory_hostname == rabbitmq_master
+
+- name: "RabbitMQ cluster :: Starting rabbitmq app on {{ rabbitmq_master }}"
+  command: rabbitmqctl start_app
+  register: rabbitmq_cluster_master
+  when: inventory_hostname == rabbitmq_master
+
+- name: "RabbitMQ cluster :: Terminate any running rabbitmq processes on slave(s)"
+  shell: pkill -u rabbitmq || true
+  when: inventory_hostname != rabbitmq_master
+
+- name: "RabbitMQ cluster :: Restarting rabbitmq-server on slave(s)"
+  service:
+    name: rabbitmq-server
+    state: restarted
+  when: inventory_hostname != rabbitmq_master
+
+- name: "RabbitMQ cluster :: Stopping rabbitmq app on slave(s)"
+  command: rabbitmqctl stop_app
+  when: inventory_hostname != rabbitmq_master
+
+- name: "RabbitMQ cluster :: Resetting rabbitmq app on slave(s)"
+  command: rabbitmqctl reset
+  when: inventory_hostname != rabbitmq_master
+
+- name: "RabbitMQ cluster :: Joining rabbitmq cluster on slave(s)"
+  command: rabbitmqctl join_cluster "rabbit@{{ hostvars[rabbitmq_master]['ansible_hostname'] }}"
+  register: rabbitmq_cluster_joined
+  when: inventory_hostname != rabbitmq_master
+
+- name: "RabbitMQ cluster :: Starting rabbitmq app on slave(s)"
+  command: rabbitmqctl start_app
+  when: inventory_hostname != rabbitmq_master
+
+- name: "RabbitMQ cluster :: Restarting rabbitmq-server on slave(s)"
+  service:
+    name: rabbitmq-server
+    state: restarted
+
+- name: "RabbitMQ cluster :: Mark the cluster by creating /etc/rabbitmq/cluster file"
+  file:
+    path: /etc/rabbitmq/cluster
+    state: touch
+  when: rabbitmq_cluster_master.changed or rabbitmq_cluster_joined.changed

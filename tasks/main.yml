@@ -1,0 +1,44 @@
+---
+- include_tasks: 00-cleanup.yml
+  when: rabbitmq_cleanup or rabbitmq_purge
+
+- include_tasks: 01-pre-install.yml
+  when: rabbitmq_basedir != '/var/lib/rabbitmq'
+
+- include_tasks: install-RedHat.yml
+  when: ansible_os_family == "RedHat"
+
+# - include_tasks: install-Debian.yml
+#   whdn: ansible_os_family == "Debian"
+
+- include_tasks: 03-config.yml
+
+- name: "Starting and enabling RabbitMQ service"
+  service:
+    name: rabbitmq-server
+    state: started
+    enabled: yes
+
+- name: "Ensure cluster is on in ha mode"
+  set_fact:
+    rabbitmq_setup_cluster: true
+  when: rabbitmq_setup_ha
+
+- name: Checking to see if already clustered
+  stat:
+    path: "{{ rabbitmq_base }}/cluster"
+  register: rabbitmq_cluster
+
+- include_tasks: 04-cluster.yml
+  when: rabbitmq_setup_cluster and not rabbitmq_cluster.stat.exists
+
+- include_tasks: 05-users.yml
+  when: rabbitmq_users is defined
+  tags:
+    - user
+
+- include_tasks: 06-queues.yml
+  when: rabbitmq_queues is defined
+
+- include_tasks: 07-ha.yml
+  when: rabbitmq_setup_ha

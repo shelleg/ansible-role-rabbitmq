@@ -1,0 +1,20 @@
+# Ansible managed /etc/rabbitmq/rabbitmq-env.conf file.
+# Comment lines start with a hash character.
+# This is a /bin/sh script file - use ordinary envt var syntax
+
+RABBITMQ_BASE={{ rabbitmq_base }}
+RABBITMQ_CONFIG_FILE={{ rabbitmq_config_file }}
+RABBITMQ_ADVANCED_CONFIG_FILE={{ rabbitmq_advanced_config_file }}
+RABBITMQ_GENERATED_CONFIG_DIR={{ rabbitmq_generated_config_dir }}
+RABBITMQ_MNESIA_BASE={{ rabbitmq_mnesia_base }}
+RABBITMQ_MNESIA_DIR={{ rabbitmq_mnesia_dir }}
+RABBITMQ_SCHEMA_DIR={{ rabbitmq_schema_dir }}
+RABBITMQ_LOG_BASE={{ rabbitmq_log_base }}
+RABBITMQ_LOGS={{ rabbitmq_logs }}
+{% if rabbitmq_sasl_logs is defined %}RABBITMQ_SASL_LOGS={{ rabbitmq_sasl_logs }}{% endif %}
+
+#RABBITMQ_PLUGINS_DIR={{ rabbitmq_plugins_dir }}
+RABBITMQ_ENABLED_PLUGINS_FILE={{ rabbitmq_enabled_plugins_file }}
+RABBITMQ_PID_FILE={{ rabbitmq_pid_file }}
+
+RABBITMQ_NODE_PORT={{ rabbitmq_listen_port }}

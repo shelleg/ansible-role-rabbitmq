@@ -1,0 +1,34 @@
+---
+- name: "RabbitMQ pre-install :: Create RabbitMQ group if not exists"
+  group:
+    name: "{{ rabbitmq_group }}"
+    state: present
+
+- name: "RabbitMQ pre-install :: Create RabbitMQ user if not exists"
+  user:
+    name: "{{ rabbitmq_user }}"
+    shell: /sbin/nologin
+    createhome: yes
+    home: "{{ rabbitmq_homedir }}"
+    group: "{{ rabbitmq_group }}"
+    state: present
+    update_password: on_create
+
+- name: "RabbitMQ pre-install :: Check if RabbitMQ dirs present"
+  stat:
+    path: "{{ item }}"
+  with_items:
+    - "{{ rabbitmq_dir_list }}"
+  register: rabbitmq_dirs
+
+- name: "RabbitMQ pre-install :: Create RabbitMQ dirs"
+  file:
+    path: "{{ item.item }}"
+    state: directory
+    owner: "{{ rabbitmq_user }}"
+    group: "{{ rabbitmq_group }}"
+    mode: 0755
+    recurse: true
+  with_items:
+    - "{{ rabbitmq_dirs.results }}"
+  when: item.stat.exists == False

@@ -1,0 +1,19 @@
+---
+
+- name: restart RabbitMQ
+  systemd:
+      name: rabbitmq-server
+      state: restarted
+      daemon_reload: yes
+
+- name: start RabbitMQ
+  systemd:
+      name: rabbitmq-server
+      state: started
+      daemon_reload: yes
+
+- name: stop RabbitMQ
+  systemd:
+      name: rabbitmq-server
+      state: stopped
+      daemon_reload: yes

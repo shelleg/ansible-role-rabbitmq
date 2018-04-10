@@ -1,0 +1,40 @@
+---
+- name: "RabbitMQ install {{ ansible_os_family }} :: Ensure the Erlang APT repo GPG key is present"
+  apt_key:
+    url: https://packages.erlang-solutions.com/ubuntu/erlang_solutions.asc
+    state: present
+
+- name: "RabbitMQ install {{ ansible_os_family }} :: Ensure the Erlang APT repo is present"
+    apt_repository:
+      repo: "deb https://packages.erlang-solutions.com/ubuntu {{ ansible_distribution_release }} contrib"
+      filename: erlang
+      state: present
+      update_cache: true
+
+- name: "RabbitMQ install {{ ansible_os_family }} :: Ensure the RabbitMQ APT repo GPG key is present"
+  apt_key:
+    url: https://dl.bintray.com/rabbitmq/Keys/rabbitmq-release-signing-key.asc
+    state: present
+
+- name: "RabbitMQ install {{ ansible_os_family }} :: Ensure the RabbitMQ APT repo is present"
+  apt_repository:
+    repo: "deb https://dl.bintray.com/rabbitmq/debian {{ ansible_distribution_release }} main"
+    filename: rabbitmq
+    state: present
+    update_cache: true
+
+- name: "RabbitMQ cluster :: Copy erlang cookie"
+  template:
+    src: erlang.cookie.j2
+    dest: "{{ rabbitmq_erlang_cookie_file }}"
+    owner: "{{ rabbitmq_user }}"
+    group: "{{ rabbitmq_group }}"
+    mode: 0400
+    backup: yes
+
+- name: "RabbitMQ install {{ ansible_os_family }} :: Ensure RabbitMQ is installed"
+  apt:
+    name: rabbitmq-server
+    state: installed
+    cache_valid_time: 600
+    update_cache: true

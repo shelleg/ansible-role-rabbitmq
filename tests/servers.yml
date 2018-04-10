@@ -1,0 +1,32 @@
+---
+- name: rabbit1
+  box: centos/7
+  box_version: 1708.01
+  ram: 1024
+  ip: 172.16.1.101
+  ssh_host_port: 2210
+  provider: virtualbox
+  protected: false
+  inventory: ./inventory
+  playbook: test-single.yml
+
+- name: rabbit2
+  box: centos/7
+  box_version: 1708.01
+  ram: 1024
+  ip: 172.16.1.102
+  ssh_host_port: 2211
+  provider: virtualbox
+  protected: false
+  inventory: ./inventory
+
+- name: rabbit3
+  box: bento/ubuntu-16.04
+  box_version: '2.2.7'
+  ram: 1024
+  ip: 172.16.1.103
+  ssh_host_port: 2212
+  provider: virtualbox
+  protected: false
+  playbook: test-single.yml
+  inventory: ./inventory

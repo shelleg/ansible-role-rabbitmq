@@ -1,0 +1,39 @@
+---
+- name: "RabbitMQ queues exchanges and binds :: Creating queue(s)"
+  rabbitmq_queue:
+    name: "{{ item.name }}"
+    vhost: "{{ item.vhost | d('/') }}"
+    durable: "{{ item.durable | d(true) }}"
+    auto_delete: "{{ item.auto_delete | d(false) }}"
+    arguments: "{{ item.arguments | d(omit) }}"
+    state: "{{ item.state | d(omit) }}"
+    message_ttl: "{{ item.message_ttl | d(omit) }}"
+    dead_letter_exchange: "{{ item.dead_letter_exchange | d(omit) }}"
+    dead_letter_routing_key: "{{ item.dead_letter_routing_key | d(omit) }}"
+    max_length: "{{ item.max_length | d(omit) }}"
+  run_once: true
+  with_items: "{{ rabbitmq_queues }}"
+  when: rabbitmq_queues is defined
+
+- name: "RabbitMQ queues exchanges and binds :: Creating exchange(s)"
+  rabbitmq_exchange:
+    name: "{{ item.name }}"
+    vhost: "{{ item.vhost | d('/') }}"
+    type: "{{ item.type }}"
+    vhost: "{{ item.vhost | d('/') }}"
+    internal: "{{ item.internal | d('false')}}"
+    durable: "{{ item.durable | d(true) }}"
+    auto_delete: "{{ item.auto_delete | d(false) }}"
+  run_once: true
+  with_items: "{{ rabbitmq_exchanges }}"
+  when: rabbitmq_exchanges is defined
+
+- name: "RabbitMQ queues exchanges and binds :: Creating bindings"
+  rabbitmq_binding:
+    name: "{{ item.source }}"
+    destination: "{{ item.destination }}"
+    type: "{{ item.destination_type | d('queue') }}"
+    routing_key: "{{ item.routing_key }}"
+  run_once: true
+  with_items: "{{ rabbitmq_bindings }}"
+  when: rabbitmq_bindings is defined

@@ -1,0 +1,41 @@
+---
+- name: "RabbitMQ users :: Remove guest user"
+  rabbitmq_user:
+    name: guest
+    state: absent
+  when: rabbitmq_guest_disable
+  tags:
+    - user
+    
+- name: "RabbitMQ users :: Create RabbitMQ users in cluster mode"
+  rabbitmq_user:
+    name: "{{ item.name }}"
+    password: "{{ item.password }}"
+    vhost: "{{ item.vhost | d('/') }}"
+    configure_priv: "{{ item.configure_priv | d('.*') }}"
+    read_priv: "{{ item.read_priv | d('.*') }}"
+    write_priv: "{{ item.write_priv | d('.*') }}"
+    tags: "{{ item.tags }}"
+    state: "{{ item.state }}"
+  run_once: yes
+  become: true
+  with_items: "{{ rabbitmq_users }}"
+  when: rabbitmq_setup_cluster is defined and rabbitmq_setup_cluster
+  tags:
+    - user
+
+- name: "RabbitMQ users :: Create RabbitMQ users | standalone"
+  rabbitmq_user:
+    user: "{{ item.name }}"
+    password: "{{ item.password }}"
+    tags: "{{ item.tags }}"
+    permissions:
+        - vhost: "{{ item.vhost | d('/') }}"
+          configure_priv: "{{ item.configure_priv | d('.*') }}"
+          read_priv: "{{ item.read_priv | d('.*') }}"
+          write_priv: "{{ item.write_priv | d('.*') }}"
+    state: "{{ item.state }}"
+  with_items: "{{ rabbitmq_users }}"
+  when: rabbitmq_setup_cluster is defined and not rabbitmq_setup_cluster
+  tags:
+    - user
